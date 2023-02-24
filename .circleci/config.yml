@@ -34,7 +34,7 @@ jobs:
 workflows:
   version: 2.1
 
-  say-hello-workflow:
+  Cypress-workflow:
     jobs:
       - basic web
       - cy-depended_test:
