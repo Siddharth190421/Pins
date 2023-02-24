@@ -11,4 +11,11 @@ workflows:
       - cypress/run 
   build2:
     jobs:
-      - cypress/run 
+      - cypress/run
+
+my_workflows:
+    jobs:
+      - build:
+      - build2:
+          requires:
+            -build
