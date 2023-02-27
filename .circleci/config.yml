@@ -40,5 +40,6 @@ workflows:
       - cy-depended_test:
           requires:
               - basic web
+          type: approval
 
           
