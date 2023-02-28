@@ -2,6 +2,12 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+orbs:
+  # "cypress-io/cypress@2" installs the latest published
+  # version "s.x.y" of the orb. We recommend you then use
+  # the strict explicit version "cypress-io/cypress@2.x.y"
+  # to lock the version and prevent unexpected CI changes
+  cypress: cypress-io/cypress@1
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -33,14 +39,40 @@ jobs:
 
   cy-depended_test:
     docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+      - image: cypress/base:12.19.0
     steps:
-      - checkout
-      - run:
-          name: "Say bye"
-          command: "echo bye, World!"
+    - run:
+        command: echo "Assuming dependencies were installed using cypress/install job"
+    - attach_workspace:
+        at: ~/
+    - checkout
+    - restore_cache:
+        keys:
+        - cache-{{ arch }}-{{ .Branch }}-{{ checksum "package.json" }}
+    - run:
+        name: Install
+        working_directory: ''
+        command: "if [[ ! -z \"\" ]]; then\n  echo \"Installing using custom command\"\n  echo \"\"\n  \nelif [ \"false\" = \"true\" ]; then\n  echo \"Installing using Yarn\"\n  yarn install --frozen-lockfile\nelif [ ! -e ./package-lock.json ]; then\n  echo \"The Cypress orb uses 'npm ci' to install 'node_modules', which requires a 'package-lock.json'.\"\n  echo \"A 'package-lock.json' file was not found. Please run 'npm install' in your project,\"\n  echo \"and commit 'package-lock.json' to your repo.\"\n  exit 1\nelse\n  echo \"Installing dependencies using NPM ci\"\n  npm ci\nfi\n"
+    - run:
+        name: Verify Cypress
+        command: npx cypress verify
+        working_directory: ''
+    - save_cache:
+        key: cache-{{ arch }}-{{ .Branch }}-{{ checksum "package.json" }}
+        paths:
+        - ~/.npm
+        - ~/.cache
+    - persist_to_workspace:
+        root: ~/
+        paths:
+        - project
+        - .cache/Cypress
+    - run:
+        name: Run Cypress tests
+        no_output_timeout: 10m
+        command: "npx cypress run \\\n   \\\n   \\\n   \\\n   \\\n   \\\n  "
+        working_directory: ''
+          
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
